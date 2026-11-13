@@ -1,4 +1,4 @@
-import { createClient, createRelayClient, OwnferenceError, type Client, type GenerateInput } from '../src/index.js';
+import { createClient, createRelayClient, OwnModeError, type Client, type GenerateInput } from '../src/index.js';
 async function consumer(client: Client, input: GenerateInput, signal: AbortSignal): Promise<string> {
   const models = await client.models({ signal });
   const model: string | undefined = models.models[0]?.id;
@@ -13,7 +13,7 @@ function declarations() {
   void consumer(client, { model: 'ollama:test', task: 'summarize', text: 'user text' }, new AbortController().signal);
   // @ts-expect-error Unsupported tasks must not typecheck for consumers.
   client.generate({ model: 'ollama:test', task: 'execute_shell', text: 'untrusted' });
-  const error = new OwnferenceError('NETWORK_ERROR', 'Bridge unreachable', { cause: new Error('reset'), status: 502 });
+  const error = new OwnModeError('NETWORK_ERROR', 'Bridge unreachable', { cause: new Error('reset'), status: 502 });
   const code: string = error.code;
   return code;
 }

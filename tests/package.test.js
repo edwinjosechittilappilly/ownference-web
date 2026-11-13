@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 test('packaged command serves its own assets from an unrelated working directory', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'ownference-web-'));
+  const dir = await mkdtemp(join(tmpdir(), 'ownmode-web-'));
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const packageDir = join(dir, 'package');
   let child;
@@ -19,7 +19,7 @@ test('packaged command serves its own assets from an unrelated working directory
     await new Promise(resolve => reservation.listen(0, '127.0.0.1', resolve));
     const port = reservation.address().port;
     await new Promise(resolve => reservation.close(resolve));
-    child = spawn(process.execPath, [join(packageDir, pkg.bin['ownference-web'])], { cwd: dir, env: { ...process.env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
+    child = spawn(process.execPath, [join(packageDir, pkg.bin['ownmode-web'])], { cwd: dir, env: { ...process.env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
     await new Promise((resolve, reject) => {
       child.stdout.once('data', resolve);
       child.once('error', reject);

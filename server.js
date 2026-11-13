@@ -31,5 +31,5 @@ export function createServer() {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const port = Number(process.env.PORT || 4173);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be a valid port number.');
-  createServer().listen(port, '127.0.0.1', () => console.log(`Ownference Web: http://localhost:${port}`));
+  createServer().listen(port, '127.0.0.1', () => console.log(`OwnMode Web: http://localhost:${port}`));
 }

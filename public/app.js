@@ -11,8 +11,8 @@ function refresh() {
   el['token-field'].hidden = relay;
   el.token.required = !relay;
   el['connection-help'].textContent = relay
-    ? 'Open Ownference Tabs on this page, enable relay for this tab, then connect. The native host must be installed; no token is given to this page.'
-    : 'Start Ownference, grant this exact page origin, then paste its token. The token stays in this page’s memory.';
+    ? 'Open OwnMode Browser on this page, enable relay for this tab, then connect. The native host must be installed; no token is given to this page.'
+    : 'Start OwnMode Connect, grant this exact page origin, then paste its token. The token stays in this page’s memory.';
   el.connect.disabled = busy;
   el.disconnect.disabled = !client && !busy;
   el.model.disabled = !client || busy;
@@ -52,7 +52,7 @@ el['connect-form'].addEventListener('submit', async event => {
   finally { if (current === epoch) { if (!client) pendingClient?.disconnect?.(); pendingClient = null; connecting = false; connectionController = null; refresh(); } }
 });
 el.disconnect.addEventListener('click', () => { disconnect(); status('Disconnected.'); });
-el.transport.addEventListener('change', () => { disconnect(); status(el.transport.value === 'relay' ? 'Enable relay in Ownference Tabs for this page, then connect.' : 'Paste an origin-scoped token to connect directly.'); });
+el.transport.addEventListener('change', () => { disconnect(); status(el.transport.value === 'relay' ? 'Enable relay in OwnMode Browser for this page, then connect.' : 'Paste an origin-scoped token to connect directly.'); });
 el.model.addEventListener('change', refresh);
 el['generate-form'].addEventListener('submit', async event => {
   event.preventDefault(); if (!client || controller || !el.model.value) return;
@@ -72,6 +72,6 @@ el.clear.addEventListener('click', () => { if (controller) { epoch++; controller
 el.copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(el.output.textContent); status('Copied to clipboard.'); } catch { status('Clipboard unavailable. Select the result and copy it manually.'); } });
 el.download.addEventListener('click', () => {
   const url = URL.createObjectURL(new Blob([el.output.textContent], { type: 'text/plain;charset=utf-8' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'ownference-result.txt'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = document.createElement('a'); link.href = url; link.download = 'ownmode-result.txt'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 refresh();

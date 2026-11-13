@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- Publish version-checked npm tarball and public release installation guidance.
+- Rebrand the SDK, CLI and relay protocol to OwnMode Web; existing grants require explicit reauthorization.
+
 ## 0.2.0
 
 - Add the explicitly approved Ownference Tabs relay transport and a packaged loopback demo command.

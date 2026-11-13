@@ -1,4 +1,4 @@
-# Repository audit: ownference-web
+# Historical repository audit: ownference-web (pre-rebrand)
 
 **Overall score: 55.2% (grade F)**  
 Detected stacks: node, typescript · traits: github actions  

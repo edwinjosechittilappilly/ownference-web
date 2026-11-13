@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { createClient, OwnferenceError } from '../src/index.js';
+import { createClient, OwnModeError } from '../src/index.js';
 
 async function fixture(handler, run) {
   const server = http.createServer(handler);
@@ -30,8 +30,8 @@ test('reports HTTP and in-stream errors with typed details', async () => {
     else { res.writeHead(200, { 'Content-Type': 'application/x-ndjson' }); res.end('{"type":"error","error":{"code":"OFFLINE","message":"Start Ollama"}}\n'); }
   }, async baseUrl => {
     const client = createClient({ token: 'x', baseUrl });
-    await assert.rejects(client.models(), e => e instanceof OwnferenceError && e.code === 'DENIED' && e.status === 403);
-    await assert.rejects(collect(client.generate(input)), e => e instanceof OwnferenceError && e.code === 'OFFLINE');
+    await assert.rejects(client.models(), e => e instanceof OwnModeError && e.code === 'DENIED' && e.status === 403);
+    await assert.rejects(collect(client.generate(input)), e => e instanceof OwnModeError && e.code === 'OFFLINE');
   });
 });
 test('rejects malformed, truncated and unterminated streams', async () => {

@@ -31,4 +31,4 @@ jobs:
       - name: Checksum release artifacts
         run: (cd dist && shasum -a 256 ./*.tgz > SHA256SUMS)
       - name: Publish verified tag artifacts
-        run: gh release create "$RELEASE_TAG" dist/* --verify-tag --title "Ownference $RELEASE_TAG" --generate-notes
+        run: gh release create "$RELEASE_TAG" dist/* --verify-tag --title "OwnMode Web $RELEASE_TAG" --notes-file RELEASE-NOTES.md
