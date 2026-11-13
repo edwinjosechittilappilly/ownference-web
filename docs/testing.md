@@ -6,6 +6,8 @@ Use Node24 and `npm ci --ignore-scripts`, then `npm run check`. The gate runs ES
 
 `npm start` serves the actual UI. Use the README token setup, select a real local model and exercise tasks, cancellation, download and disconnect in a browser. `npm run smoke` uses the SDK against the real runtime and Ollama; see README for environment input. Strict `npm run typecheck` checks public TypeScript declarations and a consumer contract. It does not claim that all JavaScript implementation is strict TypeScript.
 
+The packaged `ownference-web` command serves the same demo from its installed package directory, independently of the current working directory. Test the packaged release by installing or invoking the downloaded tarball, then checking the demo assets and both direct HTTP and extension relay flows. Relay acceptance requires an enabled extension, native host and running bridge; exercise denied approval, cancellation, tab navigation and disconnection as well as streaming.
+
 ## Supply chain and CI
 
 Run `npm audit --audit-level=moderate`. Development-tool overrides pin minimatch11.0.1 for ESLint and its config-array to address GHSA-g3hv-75wg-m249 without downgrading to an unsupported ESLint release. Re-evaluate the overrides when upstream dependency ranges change; lint behavior is verified with the patched toolchain.

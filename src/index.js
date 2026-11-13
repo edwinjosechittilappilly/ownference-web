@@ -96,3 +96,140 @@ export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: 
     }
   };
 }
+
+/** Connect to the user-approved Ownference Tabs relay without exposing a token. */
+export function createRelayClient() {
+  let port, connecting, sequence = 0;
+  const pending = new Map();
+  const aborted = () => new OwnferenceError('ABORTED', 'Request cancelled.');
+  const unavailable = () => new OwnferenceError('RELAY_UNAVAILABLE', 'Open Ownference Tabs and choose Enable relay for this site, then connect again.');
+  const remoteError = error => typeof error?.code === 'string' && typeof error?.message === 'string'
+    ? new OwnferenceError(error.code, error.message) : protocol('Relay sent an invalid error.');
+  function failAll(error) {
+    for (const request of pending.values()) request.finish(error);
+    pending.clear();
+  }
+  function disconnect() {
+    if (connecting) connecting.cancel();
+    if (port) {
+      try { port.postMessage({ op: 'disconnect' }); } catch { /* Already closed. */ }
+      port.close(); port = undefined;
+    }
+    failAll(new OwnferenceError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
+  }
+  async function connect() {
+    if (port) return;
+    if (connecting) return connecting.promise;
+    if (typeof window === 'undefined' || window.top !== window || !['http:', 'https:'].includes(window.location.protocol) || window.location.origin === 'null' || typeof MessageChannel === 'undefined') {
+      throw new OwnferenceError('RELAY_CONTEXT', 'Relay requires a top-level HTTP(S) page with a non-opaque origin.');
+    }
+    const channel = new MessageChannel();
+    let cancel;
+    const promise = new Promise((resolve, reject) => {
+      const timer = setTimeout(() => finish(unavailable()), 2000);
+      function finish(error) {
+        clearTimeout(timer);
+        connecting = undefined;
+        if (error) { channel.port1.close(); channel.port2.close(); reject(error); }
+        else {
+          port = channel.port1;
+          port.onmessage = onMessage;
+          port.onmessageerror = () => { failAll(protocol('Relay sent an unreadable message.')); disconnect(); };
+          port.onclose = () => {
+            if (port === channel.port1) {
+              port = undefined;
+              failAll(new OwnferenceError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
+            }
+          };
+          resolve();
+        }
+      }
+      cancel = (error = new OwnferenceError('RELAY_DISCONNECTED', 'Relay connection cancelled.')) => finish(error);
+      channel.port1.onmessage = ({ data }) => {
+        if (data?.type === 'ready') finish();
+        else if (data?.type === 'error') finish(remoteError(data.error));
+        else finish(protocol('Relay sent an invalid handshake.'));
+      };
+      channel.port1.onmessageerror = () => finish(protocol('Relay sent an unreadable handshake.'));
+    });
+    connecting = { promise, cancel };
+    try {
+      window.postMessage({ source: 'ownference-page', type: 'connect', version: 1 }, window.location.origin, [channel.port2]);
+    } catch (cause) { cancel(new OwnferenceError('RELAY_UNAVAILABLE', unavailable().message, { cause })); }
+    return promise;
+  }
+  function onMessage({ data }) {
+    if (data?.type === 'error' && data.id === undefined) {
+      failAll(remoteError(data.error));
+      disconnect();
+      return;
+    }
+    const request = pending.get(data?.id);
+    if (!request) return;
+    if (data.event === 'error') request.finish(remoteError(data.error));
+    else if (request.op === 'models' && data.event === 'models') {
+      if (!Array.isArray(data.data?.models) || data.data.models.some(m => !m || typeof m.id !== 'string' || typeof m.name !== 'string' || typeof m.provider !== 'string')) request.finish(protocol('Relay returned an invalid model list.'));
+      else request.finish(null, data.data);
+    } else if (request.op === 'generate' && data.event === 'delta' && typeof data.text === 'string') request.push(data.text);
+    else if (request.op === 'generate' && data.event === 'done') request.finish();
+    else request.finish(protocol('Relay sent an invalid response.'));
+  }
+  function start(op, input, signal) {
+    if (!port) throw new OwnferenceError('RELAY_DISCONNECTED', 'Connect to the relay first.');
+    if (signal?.aborted) throw aborted();
+    const id = String(++sequence);
+    const queue = [];
+    let wake, terminal = false, failure;
+    const notify = () => { if (wake) { const resolve = wake; wake = undefined; resolve(); } };
+    const cancel = () => {
+      if (!terminal && port) {
+        try { port.postMessage({ id: String(++sequence), op: 'cancel', target: id }); } catch { /* Already closed. */ }
+      }
+      if (!terminal) queue.length = 0;
+      request.finish(aborted());
+    };
+    const request = {
+      op,
+      push(value) { queue.push(value); notify(); },
+      finish(error, value) {
+        if (terminal) return;
+        terminal = true;
+        failure = error;
+        if (value !== undefined) queue.push(value);
+        pending.delete(id);
+        signal?.removeEventListener('abort', cancel);
+        notify();
+      },
+      cancel,
+      async next() {
+        while (!queue.length && !terminal) await new Promise(resolve => { wake = resolve; });
+        if (queue.length) return { value: queue.shift(), done: false };
+        if (failure) throw failure;
+        return { done: true };
+      }
+    };
+    pending.set(id, request);
+    signal?.addEventListener('abort', cancel, { once: true });
+    try { port.postMessage(op === 'generate' ? { id, op, input } : { id, op }); }
+    catch (cause) { request.finish(new OwnferenceError('RELAY_DISCONNECTED', 'Relay connection failed.', { cause })); }
+    return request;
+  }
+  return {
+    connect,
+    disconnect,
+    async models({ signal } = {}) {
+      const request = start('models', undefined, signal);
+      return (await request.next()).value;
+    },
+    async *generate(input, { signal } = {}) {
+      const request = start('generate', input, signal);
+      try {
+        while (true) {
+          const item = await request.next();
+          if (item.done) return;
+          yield item.value;
+        }
+      } finally { request.cancel(); }
+    }
+  };
+}

@@ -17,7 +17,7 @@ test('untrusted model text is rendered as text, never HTML', async () => {
   globalThis.Option = class { constructor(text, value) { this.text = text; this.value = value; } };
   globalThis.__testClient = () => ({ models: async () => ({ models: [{ id: 'test', name: '<img>', provider: 'ollama' }] }), async *generate() { yield '<img src=x onerror=alert(1)>'; } });
   try {
-    const source = (await readFile(new URL('../public/app.js', import.meta.url), 'utf8')).replace("import { createClient } from '/sdk.js';", 'const createClient = globalThis.__testClient;');
+    const source = (await readFile(new URL('../public/app.js', import.meta.url), 'utf8')).replace("import { createClient, createRelayClient } from '/sdk.js';", 'const createClient = globalThis.__testClient; const createRelayClient = globalThis.__testClient;');
     await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
     elements.get('token').value = 'secret'; await elements.get('connect-form').fire('submit');
     elements.get('text').value = 'source'; await elements.get('generate-form').fire('submit');

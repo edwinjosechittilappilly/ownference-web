@@ -1,18 +1,18 @@
-# Observed verification
+# Observed verification — 0.2.0
 
-Environment: Node24.10.0 on arm64 Mac; real Chromium browser and real local Ownference/Ollama. Acceptance performed during implementation, 2026-11-12/13.
+Environment: Node24.10.0, real Chromium, the real Ownference bridge/native host and local `ollama:llama3.2:latest`.
 
-- `npm run check`: 10 behavior tests passed; ESLint, Secretlint and strict consumer/declaration typecheck passed. Loaded SDK coverage: 89.80% lines, 83.95% branches, 100% functions. UI JavaScript is not claimed as fully coverage-measured.
-- Real `npm run smoke` with `OWNFERENCE_MODEL=ollama:llama3.2:latest`: SDK discovered the model and streamed a response through the authenticated local runtime.
-- Actual UI at http://localhost:4173: token entry, connect, model selection and all five tasks (summarize/rewrite/extract/compare/draft) succeeded with real Ollama. Outputs retained facts from the supplied garden/product comparison text.
-- Actual UI with `apple:system`: on-device summarization completed on this Mac.
-- The page cleared the token input after connecting. Cancel produced “Request cancelled.”; Clear emptied source/output; Disconnect reported “Not connected” and left the token input empty.
-- Download created ownference-result.txt (112 bytes in the observed Apple scenario). Copy confirmed “Copied to clipboard.” after awaiting the actual UI state.
-- Responsive view at 390px wide had scrollWidth390px: no horizontal overflow. Desktop and mobile screenshots were visually inspected.
-- Browser diagnostics included aborted request events during explicit cancellation/lifecycle cleanup; no claim of zero network diagnostic events is made.
+- `npm run check`: 19 behavior tests passed with ESLint, Secretlint and strict declaration/consumer typechecking. Loaded SDK coverage measured 94.04% lines, 87.72% branches and 88.24% functions—not full browser UI coverage.
+- Direct SDK streaming/error/cancellation/UTF-8 behavior remained covered; relay tests exercise channel connection, no-approval timeout, errors, cancellation, disconnect and unsafe-frame contexts.
+- The packaged demo command served its own assets from an unrelated working directory, rather than depending on source checkout cwd.
+- The real workspace's transport selector hid the direct token field in relay mode and connected without receiving a bridge token.
+- A real HTTPS workspace page generated a source-related result through SDK → extension → native host → bridge → Ollama while its direct HTTP loopback requests were deliberately blocked.
+- The HTTPS fixture used an ephemeral local self-signed certificate, accepted only in the isolated browser test context. This is not proof that every public HTTPS deployment/enterprise policy is supported.
+- The visible result, source/model controls, connection status and shared branding were captured and visually inspected. Disconnect returned the page to Not connected.
+- Prior direct-mode acceptance exercised all five tasks, copy/download, cancel, clear, disconnect and mobile layout, plus `apple:system` on-device summarization on this Mac.
 
-Independent review fixed transport-read errors incorrectly labeled as protocol errors and added invalid-UTF8/connection-reset regression coverage. Focused re-review found no remaining code blockers.
+Independent review fixed stream transport errors mislabeled as protocol errors; focused security review confirmed origin/document isolation and credential confinement in the relay.
 
-The localhost workflow is verified. Arbitrary public HTTPS deployment/browser policy combinations are NOT universally verified. The extension/native browser relay is a plan only; current SDK transport is direct loopback HTTP. LM Studio was not running on this machine. No npm registry publication is claimed.
+The relay is implemented, not a future-plan-only transport. Ordinary worker idleness restores current-document session grants; lost live work is not replayed. A receiving site can still transmit results, and scripts on an approved origin share that origin's privileges.
 
-Development dependency audit was clean with the documented patched ESLint transitive dependency overrides. GitHub Actions status is separate from these local observations.
+GitHub releases distribute actual tgz artifacts; no public npm registry publication is claimed. Release download/install checks are separate from these source-checkout observations. LM Studio was not running. See README, testing.md and Actions for supported setup and current release/CI status.
