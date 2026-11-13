@@ -10,8 +10,10 @@ This is not a server-side proxy. Localhost on your web backend means your server
 
 ## Browser constraints
 
-Hosted HTTPS-to-loopback access depends on browser Local Network Access/mixed-content/enterprise policy. The localhost demo is verified; arbitrary hosted origins are not universally supported. Grant exact origins, never wildcard CORS, and never disable browser protections. A planned extension relay would avoid page-held bridge tokens and direct page-to-loopback networking; it is not implemented here.
+Hosted HTTPS-to-loopback access depends on browser Local Network Access/mixed-content/enterprise policy. Grant exact origins, never wildcard CORS, and never disable browser protections. Alternatively, `createRelayClient()` uses the Ownference Tabs extension: the user must choose Enable relay for this site in the extension before calling `await client.connect()`. Then `models()` and `generate()` use the same interfaces as the HTTP client; `disconnect()` stops outstanding work. Only top-level HTTP(S) documents are supported. The native host owns the runtime token; neither the page nor extension receives it. Connection attempts time out with instructions and must be retried explicitly after user approval.
+
+The relay is an origin-level capability: any script running in the approved page's origin can request local model access, including malicious or compromised same-origin scripts. Approval is session-only and scoped by the extension to the tab and document. Relay access does not guarantee compatibility with every browser or enterprise policy.
 
 ## Privacy and adoption
 
-There are no runtime dependencies, external CDN scripts, telemetry or cloud fallback. A consuming website still receives its results and can transmit them. Expose supported tasks and provider differences honestly. Keep tokens out of URLs, logs, source and automatic persistent storage. Install the unpublished SDK from a local clone; do not advertise an npm publication that has not happened.
+There are no runtime dependencies, external CDN scripts, telemetry or cloud fallback. A consuming website still receives its results and can transmit them. Expose supported tasks and provider differences honestly. Keep tokens out of URLs, logs, source and automatic persistent storage. Install the SDK from a release tarball or local clone; do not advertise an npm publication that has not happened.

@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="23" fill="#172d29"/><path d="M18 41c0-13 9-23 22-23s22 10 22 23-9 22-22 22S18 54 18 41Z" fill="none" stroke="#a7ebc6" stroke-width="6"/><path d="M29 42h22M40 30v24" stroke="#a7ebc6" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="21" r="7" fill="#f6b86c"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Ownference Web</title><desc id="desc">The shared Ownference linked loops and spark, with a developer-brackets badge.</desc>
+  <rect width="128" height="128" rx="30" fill="#103b32"/>
+  <g fill="none" stroke="#c8f0da" stroke-width="8"><ellipse cx="51" cy="57" rx="25" ry="30"/><ellipse cx="77" cy="57" rx="25" ry="30"/></g>
+  <path d="M64 41c3 9 7 13 16 16-9 3-13 7-16 16-3-9-7-13-16-16 9-3 13-7 16-16Z" fill="#f5f7ef"/>
+  <rect x="83" y="83" width="39" height="39" rx="13" fill="#268568" stroke="#f5f7ef" stroke-width="3"/>
+  <path d="m98 95-7 7 7 7m9-14 7 7-7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

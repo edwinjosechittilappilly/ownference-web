@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
+- Add the explicitly approved Ownference Tabs relay transport and a packaged loopback demo command.
+- Actual workspace transport selector for direct loopback or token-free browser relay.
+- Release tarball install paths, shared logo/hero assets and durable packaged demo CLI.
 - Distinguish interrupted stream connections from malformed UTF-8 and other protocol errors.
 
 ## 0.1.0
