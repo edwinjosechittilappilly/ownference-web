@@ -1,42 +1,42 @@
 /** An actionable error from the local bridge or its transport. */
-export class OwnferenceError extends Error {
+export class OwnModeError extends Error {
   constructor(code, message, options = {}) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
-    this.name = 'OwnferenceError';
+    this.name = 'OwnModeError';
     this.code = code;
     if (options.status !== undefined) this.status = options.status;
   }
 }
 
 const MAX_LINE = 1024 * 1024;
-const protocol = (message, cause) => new OwnferenceError('PROTOCOL_ERROR', message, { cause });
+const protocol = (message, cause) => new OwnModeError('PROTOCOL_ERROR', message, { cause });
 
 /** Create a client. Tokens are held only in this client's memory. */
 export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: fetchImpl = globalThis.fetch } = {}) {
-  if (typeof token !== 'string' || !token.trim()) throw new OwnferenceError('INVALID_TOKEN', 'Enter a bridge token first.');
+  if (typeof token !== 'string' || !token.trim()) throw new OwnModeError('INVALID_TOKEN', 'Enter a bridge token first.');
   let url;
-  try { url = new URL(baseUrl); } catch { throw new OwnferenceError('INVALID_URL', 'Bridge URL must be an HTTP loopback origin.'); }
+  try { url = new URL(baseUrl); } catch { throw new OwnModeError('INVALID_URL', 'Bridge URL must be an HTTP loopback origin.'); }
   if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) {
-    throw new OwnferenceError('INVALID_URL', 'Bridge URL must be an HTTP loopback origin such as http://127.0.0.1:3210.');
+    throw new OwnModeError('INVALID_URL', 'Bridge URL must be an HTTP loopback origin such as http://127.0.0.1:3210.');
   }
-  if (typeof fetchImpl !== 'function') throw new OwnferenceError('FETCH_UNAVAILABLE', 'This environment does not provide fetch.');
+  if (typeof fetchImpl !== 'function') throw new OwnModeError('FETCH_UNAVAILABLE', 'This environment does not provide fetch.');
   const origin = url.origin;
   async function request(path, init, signal) {
     let response;
     try {
       response = await fetchImpl(origin + path, { ...init, signal, redirect: 'error', headers: { Authorization: `Bearer ${token}`, ...init.headers } });
     } catch (cause) {
-      if (signal?.aborted || cause?.name === 'AbortError') throw new OwnferenceError('ABORTED', 'Request cancelled.', { cause });
-      throw new OwnferenceError('NETWORK_ERROR', 'Cannot reach the local bridge. Check that it is running, this exact page origin is granted, and your browser permits local network access.', { cause });
+      if (signal?.aborted || cause?.name === 'AbortError') throw new OwnModeError('ABORTED', 'Request cancelled.', { cause });
+      throw new OwnModeError('NETWORK_ERROR', 'Cannot reach the local bridge. Check that it is running, this exact page origin is granted, and your browser permits local network access.', { cause });
     }
     if (!response.ok) {
       let body;
       try { body = await response.json(); } catch (cause) {
-        if (signal?.aborted || cause?.name === 'AbortError') throw new OwnferenceError('ABORTED', 'Request cancelled.', { cause });
+        if (signal?.aborted || cause?.name === 'AbortError') throw new OwnModeError('ABORTED', 'Request cancelled.', { cause });
         /* A non-JSON error still has a useful HTTP status. */
       }
       const error = body?.error;
-      throw new OwnferenceError(typeof error?.code === 'string' ? error.code : 'HTTP_ERROR', typeof error?.message === 'string' ? error.message : `Bridge returned HTTP ${response.status}. Check the token and origin grant.`, { status: response.status });
+      throw new OwnModeError(typeof error?.code === 'string' ? error.code : 'HTTP_ERROR', typeof error?.message === 'string' ? error.message : `Bridge returned HTTP ${response.status}. Check the token and origin grant.`, { status: response.status });
     }
     return response;
   }
@@ -45,7 +45,7 @@ export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: 
       const response = await request('/v1/models', {}, signal);
       let data;
       try { data = await response.json(); } catch (cause) {
-        if (signal?.aborted) throw new OwnferenceError('ABORTED', 'Request cancelled.', { cause });
+        if (signal?.aborted) throw new OwnModeError('ABORTED', 'Request cancelled.', { cause });
         throw protocol('Bridge returned invalid model JSON.', cause);
       }
       if (!Array.isArray(data?.models) || data.models.some(m => !m || typeof m.id !== 'string' || typeof m.name !== 'string' || typeof m.provider !== 'string')) throw protocol('Bridge returned an invalid model list.');
@@ -64,7 +64,7 @@ export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: 
         if (done) throw protocol('Bridge sent data after the terminal record.');
         if (item?.type === 'delta' && typeof item.text === 'string') return item.text;
         if (item?.type === 'done') { done = true; return null; }
-        if (item?.type === 'error' && typeof item.error?.code === 'string' && typeof item.error?.message === 'string') throw new OwnferenceError(item.error.code, item.error.message);
+        if (item?.type === 'error' && typeof item.error?.code === 'string' && typeof item.error?.message === 'string') throw new OwnModeError(item.error.code, item.error.message);
         throw protocol('Bridge sent an invalid stream record.');
       }
       try {
@@ -86,9 +86,9 @@ export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: 
         if (buffer.length) throw protocol('Bridge stream ended with an incomplete NDJSON record.');
         if (!done) throw protocol('Bridge stream ended before its terminal record.');
       } catch (cause) {
-        if (cause instanceof OwnferenceError) throw cause;
-        if (signal?.aborted || cause?.name === 'AbortError') throw new OwnferenceError('ABORTED', 'Request cancelled.', { cause });
-        throw new OwnferenceError('NETWORK_ERROR', 'The connection to the local bridge was interrupted. Check that the bridge and local model are running, then retry.', { cause });
+        if (cause instanceof OwnModeError) throw cause;
+        if (signal?.aborted || cause?.name === 'AbortError') throw new OwnModeError('ABORTED', 'Request cancelled.', { cause });
+        throw new OwnModeError('NETWORK_ERROR', 'The connection to the local bridge was interrupted. Check that the bridge and local model are running, then retry.', { cause });
       } finally {
         if (!exhausted) { try { await reader.cancel(); } catch { /* stream already closed */ } }
         reader.releaseLock();
@@ -97,14 +97,14 @@ export function createClient({ token, baseUrl = 'http://127.0.0.1:3210', fetch: 
   };
 }
 
-/** Connect to the user-approved Ownference Tabs relay without exposing a token. */
+/** Connect to the user-approved OwnMode Browser relay without exposing a token. */
 export function createRelayClient() {
   let port, connecting, sequence = 0;
   const pending = new Map();
-  const aborted = () => new OwnferenceError('ABORTED', 'Request cancelled.');
-  const unavailable = () => new OwnferenceError('RELAY_UNAVAILABLE', 'Open Ownference Tabs and choose Enable relay for this site, then connect again.');
+  const aborted = () => new OwnModeError('ABORTED', 'Request cancelled.');
+  const unavailable = () => new OwnModeError('RELAY_UNAVAILABLE', 'Open OwnMode Browser and choose Enable relay for this site, then connect again.');
   const remoteError = error => typeof error?.code === 'string' && typeof error?.message === 'string'
-    ? new OwnferenceError(error.code, error.message) : protocol('Relay sent an invalid error.');
+    ? new OwnModeError(error.code, error.message) : protocol('Relay sent an invalid error.');
   function failAll(error) {
     for (const request of pending.values()) request.finish(error);
     pending.clear();
@@ -115,13 +115,13 @@ export function createRelayClient() {
       try { port.postMessage({ op: 'disconnect' }); } catch { /* Already closed. */ }
       port.close(); port = undefined;
     }
-    failAll(new OwnferenceError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
+    failAll(new OwnModeError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
   }
   async function connect() {
     if (port) return;
     if (connecting) return connecting.promise;
     if (typeof window === 'undefined' || window.top !== window || !['http:', 'https:'].includes(window.location.protocol) || window.location.origin === 'null' || typeof MessageChannel === 'undefined') {
-      throw new OwnferenceError('RELAY_CONTEXT', 'Relay requires a top-level HTTP(S) page with a non-opaque origin.');
+      throw new OwnModeError('RELAY_CONTEXT', 'Relay requires a top-level HTTP(S) page with a non-opaque origin.');
     }
     const channel = new MessageChannel();
     let cancel;
@@ -138,13 +138,13 @@ export function createRelayClient() {
           port.onclose = () => {
             if (port === channel.port1) {
               port = undefined;
-              failAll(new OwnferenceError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
+              failAll(new OwnModeError('RELAY_DISCONNECTED', 'Relay disconnected. Connect again after enabling this site.'));
             }
           };
           resolve();
         }
       }
-      cancel = (error = new OwnferenceError('RELAY_DISCONNECTED', 'Relay connection cancelled.')) => finish(error);
+      cancel = (error = new OwnModeError('RELAY_DISCONNECTED', 'Relay connection cancelled.')) => finish(error);
       channel.port1.onmessage = ({ data }) => {
         if (data?.type === 'ready') finish();
         else if (data?.type === 'error') finish(remoteError(data.error));
@@ -154,8 +154,8 @@ export function createRelayClient() {
     });
     connecting = { promise, cancel };
     try {
-      window.postMessage({ source: 'ownference-page', type: 'connect', version: 1 }, window.location.origin, [channel.port2]);
-    } catch (cause) { cancel(new OwnferenceError('RELAY_UNAVAILABLE', unavailable().message, { cause })); }
+      window.postMessage({ source: 'ownmode-page', type: 'connect', version: 1 }, window.location.origin, [channel.port2]);
+    } catch (cause) { cancel(new OwnModeError('RELAY_UNAVAILABLE', unavailable().message, { cause })); }
     return promise;
   }
   function onMessage({ data }) {
@@ -175,7 +175,7 @@ export function createRelayClient() {
     else request.finish(protocol('Relay sent an invalid response.'));
   }
   function start(op, input, signal) {
-    if (!port) throw new OwnferenceError('RELAY_DISCONNECTED', 'Connect to the relay first.');
+    if (!port) throw new OwnModeError('RELAY_DISCONNECTED', 'Connect to the relay first.');
     if (signal?.aborted) throw aborted();
     const id = String(++sequence);
     const queue = [];
@@ -211,7 +211,7 @@ export function createRelayClient() {
     pending.set(id, request);
     signal?.addEventListener('abort', cancel, { once: true });
     try { port.postMessage(op === 'generate' ? { id, op, input } : { id, op }); }
-    catch (cause) { request.finish(new OwnferenceError('RELAY_DISCONNECTED', 'Relay connection failed.', { cause })); }
+    catch (cause) { request.finish(new OwnModeError('RELAY_DISCONNECTED', 'Relay connection failed.', { cause })); }
     return request;
   }
   return {

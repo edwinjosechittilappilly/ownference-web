@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRelayClient, OwnferenceError } from '../src/index.js';
+import { createRelayClient, OwnModeError } from '../src/index.js';
 
 const input = { model: 'ollama:test', task: 'summarize', text: 'hello' };
 const models = { models: [{ id: 'ollama:test', name: 'Test', provider: 'ollama' }] };
@@ -12,7 +12,7 @@ async function fixture(handler, run) {
   const window = {
     location: { protocol: 'https:', origin: 'https://example.test' },
     postMessage(message, origin, ports) {
-      assert.deepEqual(message, { source: 'ownference-page', type: 'connect', version: 1 });
+      assert.deepEqual(message, { source: 'ownmode-page', type: 'connect', version: 1 });
       assert.equal(origin, 'https://example.test');
       peer = ports[0];
       peers.push(peer);
@@ -57,7 +57,7 @@ test('relay preserves remote errors and rejects invalid responses', async () => 
   }, async () => {
     const client = createRelayClient(); await client.connect();
     await assert.rejects(client.models(), e => e.code === 'PROTOCOL_ERROR');
-    await assert.rejects(collect(client.generate(input)), e => e instanceof OwnferenceError && e.code === 'NATIVE_UNAVAILABLE');
+    await assert.rejects(collect(client.generate(input)), e => e instanceof OwnModeError && e.code === 'NATIVE_UNAVAILABLE');
     client.disconnect();
   });
 });

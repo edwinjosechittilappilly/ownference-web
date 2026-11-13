@@ -1,6 +1,6 @@
 {
-  "name": "@ownference/web",
-  "version": "0.2.0",
+  "name": "@ownmode/web",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "A browser SDK and demo for bringing your own local AI models.",
@@ -13,7 +13,7 @@
   },
   "types": "./src/index.d.ts",
   "bin": {
-    "ownference-web": "./bin/ownference-web.js"
+    "ownmode-web": "./bin/ownmode-web.js"
   },
   "files": [
     "src",

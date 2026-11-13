@@ -1,4 +1,16 @@
-# Observed verification — 0.2.0
+# Observed verification
+
+## OwnMode Web 0.3.0 identity cutover
+
+- `npm run check` passed: lint, secret scanning, strict declaration/consumer typechecking and all 19 behavior tests.
+- Real Chromium exercised the renamed page-channel protocol through OwnMode Browser, native host and Connect to local Ollama.
+- The actual HTTPS workspace connected with its token field empty/hidden, streamed a source-related result and disconnected. Direct page fetches to the bridge were blocked during this scenario.
+- The charcoal/paper interface, shared split-O mark and readable product label were captured from the running workspace and visually inspected.
+- Release installation and GitHub CI are separate from these source-checkout observations. A receiving website can transmit generated results elsewhere; npm registry publication is not claimed.
+
+## Historical verification — Ownference 0.2.0
+
+Historical record: these observations describe the pre-rebrand Ownference 0.2.0 software and are not verification of OwnMode 0.3.0.
 
 Environment: Node24.10.0, real Chromium, the real Ownference bridge/native host and local `ollama:llama3.2:latest`.
 
